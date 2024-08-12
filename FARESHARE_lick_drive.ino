@@ -5,14 +5,6 @@
   jfrie2@uwo.ca
   July 18, 2024
 
-  FED0 is a bare bones pellet dispenser.
-
-  FED was originally developed by Nguyen at al and published in 2016:
-  https://www.ncbi.nlm.nih.gov/pubmed/27060385
-
-  This code includes code from:
-  *** Adafruit, who made the hardware breakout boards and associated code we used in FED ***
-
   This project is released under the terms of the GNU GENERAL PUBLIC LICENSE (GPL-3.0 license)
   Copyright (c) 2024 Jude Frie
 ********************************************************/
