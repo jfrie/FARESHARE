@@ -1,5 +1,5 @@
 /********************************************************
-  FARESHARE
+  FARESHARE Lick Drive Beta
   Written by Jude Frie
   University of Western Ontario
   jfrie2@uwo.ca
