@@ -50,11 +50,11 @@ OpenLog logger;
 
 // known RFID tags: replace, add, or remove tag IDs as required.
 // It is currently configured for 4 rats and a tag for priming the pump tubing.
-//******************************************************************************************** try adding additional tags and see if effects volume
-char tag1[tagLength] = "F83D103CBC87"; // rat 1 tag, comment when testing
-char tag2[tagLength] = "C23D103CBC87"; // rat 2 tag, comment when testing
-char tag3[tagLength] = "043D103CBC87"; // rat 3 tag
-char tag4[tagLength] = "223D103CBC87"; // rat 4 tag
+//********************************************************************************************
+char tag1[tagLength] = "0CC4B9F04C87"; // rat 1 tag
+char tag2[tagLength] = "B4C4B9F04C87"; // rat 2 tag
+char tag3[tagLength] = "223D103CBC87"; // rat 3 tag
+char tag4[tagLength] = "xxxD103CBC87"; // rat 4 tag
 
 //char tag5[tagLength] = ""; // next rat tag 
 
@@ -91,9 +91,11 @@ unsigned long bout_end = 0;
 int tick = 0;
 unsigned long start = 0;
 byte buttonState = 0;
+int num_acts_1 = 0;
+int num_acts_2 = 0;
 
-// flow_scale and motor_scale may need to be adjusted for volume measurement and rate to be accurate
-float flow_scale = 0.2707092583;
+// flow_scale may need to be adjusted for volume measurement to be accurate
+float flow_scale = 0.53879;
 float flow_rate = 0.00744 * flow_scale;
 
 // Instantiate software serial
@@ -231,7 +233,10 @@ void checkTag(char tag[])
     //********************************************************
     if (compareTag(tag, tag1))
     { // if senses tag 1
-
+    
+        num_acts_1++;
+        updateDisplayRat1();
+        
         // timer for last tag read
         start = millis();
 
@@ -241,19 +246,19 @@ void checkTag(char tag[])
         // reset bout end to bout start
         bout_end = bout_start;
 
-        // While the tag present is being sensed or less than 2000ms has passed since tag present
+        // reset loop timer
+        int count = 1;
+
+        // While the tag present is being sensed or less than 2s has passed since tag present
         while ((compareTag(tag, tag1)) || (((millis() - start) < time_allowed))) 
         { 
+            count++;
 
             // reset last read timer if tag is read
             if (compareTag(tag, tag1))
             {
                 start = millis();
             }
-
-            // prepare RFID for next read
-            clearTag(tagString);
-            resetReader();
 
             // read lickometer
             cap_value = cap_val.capacitiveSensor(100);
@@ -283,7 +288,17 @@ void checkTag(char tag[])
               // show current total volume and licks for rat on display
               updateDisplayRat1();
             }
-            readTag();
+
+            if (count % 30 == 0){
+              clearTag(tagString);
+              resetReader();
+            }
+
+            if ((count - 20) % 30 == 0){
+              readTag();
+            }
+
+
         }
 
         // if a bout has occured and is finished, save the results
@@ -307,21 +322,23 @@ void checkTag(char tag[])
     }
     else if (compareTag(tag, tag2))
     {
+        num_acts_2++;
+        updateDisplayRat2();
         start = millis();
         bout_start = millis();
         bout_end = bout_start;
-        while ((compareTag(tag, tag2)) || (((millis() - start) < time_allowed)))
-        {
+        int count = 1;
+        while ((compareTag(tag, tag2)) || (((millis() - start) < time_allowed))) 
+        { 
+            count++;
             if (compareTag(tag, tag2))
             {
                 start = millis();
             }
-            clearTag(tagString);
-            resetReader();
             cap_value = cap_val.capacitiveSensor(100);
             if (cap_value > lick_reg_cap)
             {
-              while (cap_value > lick_end_cap){
+              while (cap_value > lick_end_cap){ 
                 cap_value = cap_val.capacitiveSensor(100);
               }
               licks++;
@@ -332,7 +349,13 @@ void checkTag(char tag[])
               rat_2_total_volume = rat_2_total_volume + flow_rate;
               updateDisplayRat2();
             }
-            readTag();
+            if (count % 30 == 0){
+              clearTag(tagString);
+              resetReader();
+            }
+            if ((count - 20) % 30 == 0){
+              readTag();
+            }
         }
         if (licks > 0)
         {
@@ -353,21 +376,22 @@ void checkTag(char tag[])
     }
     else if (compareTag(tag, tag3))
     {
+        updateDisplayRat3();
         start = millis();
         bout_start = millis();
         bout_end = bout_start;
-        while ((compareTag(tag, tag3)) || (((millis() - start) < time_allowed)))
-        {
+        int count = 1;
+        while ((compareTag(tag, tag3)) || (((millis() - start) < time_allowed))) 
+        { 
+            count++;
             if (compareTag(tag, tag3))
             {
                 start = millis();
             }
-            clearTag(tagString);
-            resetReader();
             cap_value = cap_val.capacitiveSensor(100);
             if (cap_value > lick_reg_cap)
             {
-              while (cap_value > lick_end_cap){
+              while (cap_value > lick_end_cap){ 
                 cap_value = cap_val.capacitiveSensor(100);
               }
               licks++;
@@ -378,7 +402,13 @@ void checkTag(char tag[])
               rat_3_total_volume = rat_3_total_volume + flow_rate;
               updateDisplayRat3();
             }
-            readTag();
+            if (count % 30 == 0){
+              clearTag(tagString);
+              resetReader();
+            }
+            if ((count - 20) % 30 == 0){
+              readTag();
+            }
         }
         if (licks > 0)
         {
@@ -399,24 +429,23 @@ void checkTag(char tag[])
     }
     else if (compareTag(tag, tag4))
     {
+        updateDisplayRat4();
         start = millis();
         bout_start = millis();
         bout_end = bout_start;
-        while ((compareTag(tag, tag4)) || (((millis() - start) < time_allowed)))
-        {
+        int count = 1;
+        while ((compareTag(tag, tag4)) || (((millis() - start) < time_allowed))) 
+        { 
+            count++;
             if (compareTag(tag, tag4))
             {
                 start = millis();
             }
-            clearTag(tagString);
-            resetReader();
             cap_value = cap_val.capacitiveSensor(100);
-            Serial.println(cap_value);
             if (cap_value > lick_reg_cap)
             {
-              while (cap_value > lick_end_cap){
+              while (cap_value > lick_end_cap){ 
                 cap_value = cap_val.capacitiveSensor(100);
-                Serial.println(cap_value);
               }
               licks++;
               rat_4_total_licks++; 
@@ -424,9 +453,15 @@ void checkTag(char tag[])
               activate_motor();
               bout_volume = bout_volume + flow_rate;
               rat_4_total_volume = rat_4_total_volume + flow_rate;
-              updateDisplayRat4();
+              updateDisplayRat2();
             }
-            readTag();
+            if (count % 30 == 0){
+              clearTag(tagString);
+              resetReader();
+            }
+            if ((count - 20) % 30 == 0){
+              readTag();
+            }
         }
         if (licks > 0)
         {
@@ -453,12 +488,30 @@ void checkTag(char tag[])
     }
     else
     {
+      start = millis();
+      char unknown[13] = "";
+      int count = 0;
+      strcpy(unknown,tag);
+      
+      while((millis()-start) < 5000){
+        
+        count++;
         display.clearDisplay();
         display.setCursor(0, 0);
         display.println(F("Unknown:"));
-        display.print(tag);
+        display.print(unknown);
         display.display();
-        delay(2000);
+        clearTag(tagString);
+        readTag();
+
+        if (count % 100 == 0){
+        resetReader();
+        }
+    
+        if (compareTag(tag, tag1) || compareTag(tag, tag2) || compareTag(tag, tag3) || compareTag(tag, tag4)){
+          break;
+        }
+      }
     }
     //********************************************************
     
@@ -483,6 +536,7 @@ void clearTag(char one[])
 // compares the tag currently being read with each of the known tags
 boolean compareTag(char one[], char two[])
 {
+
     if (strlen(one) == 0)
         return false;
     for (int i = 0; i < 12; i++)
@@ -520,12 +574,13 @@ void readTag()
 void updateDisplayRat1()
 {
     display.setCursor(0, 0);
-    display.print(F("R1:"));
+    display.print(num_acts_1);
+    display.print(F(" R1:"));
     display.print(rat_1_total_volume, 2);
     display.print(F("mL"));
     display.print(F(","));
     display.print(rat_1_total_licks);
-    display.print(F("Lk     "));
+    display.print(F("Lk "));
     display.display();
 }
 
@@ -533,7 +588,8 @@ void updateDisplayRat1()
 void updateDisplayRat2()
 {
     display.setCursor(0, 8);
-    display.print(F("R2:"));
+    display.print(num_acts_2);
+    display.print(F(" R2:"));
     display.print(rat_2_total_volume, 2);
     display.print(F("mL"));
     display.print(F(","));
@@ -546,7 +602,7 @@ void updateDisplayRat2()
 void updateDisplayRat3()
 {
     display.setCursor(0, 16);
-    display.print(F("R3:"));
+    display.print(F(" R3:"));
     display.print(rat_3_total_volume, 2);
     display.print(F("mL"));
     display.print(F(","));
@@ -559,7 +615,7 @@ void updateDisplayRat3()
 void updateDisplayRat4()
 {
     display.setCursor(0, 24);
-    display.print(F("R4:"));
+    display.print(F(" R4:"));
     display.print(rat_4_total_volume, 2);
     display.print(F("mL"));
     display.print(F(","));
@@ -571,11 +627,10 @@ void updateDisplayRat4()
 // Turn the motor
 void activate_motor()
 {
-  for (int i=0; i<4; i++) {
+  for (int i=0; i<8; i++) {
     digitalWrite(stepPin, HIGH);
     delayMicroseconds(500);
     digitalWrite(stepPin, LOW);
-    delayMicroseconds(5000);
+    delayMicroseconds(4000);
   }
 }
-
