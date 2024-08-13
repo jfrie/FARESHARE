@@ -234,8 +234,8 @@ void checkTag(char tag[])
     if (compareTag(tag, tag1))
     { // if senses tag 1
     
-        num_acts_1++;
-        updateDisplayRat1();
+        //num_acts_1++;
+        //updateDisplayRat1();
         
         // timer for last tag read
         start = millis();
@@ -252,6 +252,7 @@ void checkTag(char tag[])
         // While the tag present is being sensed or less than 2s has passed since tag present
         while ((compareTag(tag, tag1)) || (((millis() - start) < time_allowed))) 
         { 
+            // set loop timer. used later for resetting scanner
             count++;
 
             // reset last read timer if tag is read
@@ -289,11 +290,14 @@ void checkTag(char tag[])
               updateDisplayRat1();
             }
 
+            // reset reader every 30 loops. This and the following if statement are required to ensure enough time has passed
+            // before the scanner reads again. the reset function takes some time to activate so if not enough time has passed 
+            // before readTag() the function will read nothing and the loop will end. 
             if (count % 30 == 0){
               clearTag(tagString);
               resetReader();
             }
-
+            // read tag after 20 more loops
             if ((count - 20) % 30 == 0){
               readTag();
             }
@@ -322,8 +326,8 @@ void checkTag(char tag[])
     }
     else if (compareTag(tag, tag2))
     {
-        num_acts_2++;
-        updateDisplayRat2();
+        //num_acts_2++;
+        //updateDisplayRat2();
         start = millis();
         bout_start = millis();
         bout_end = bout_start;
@@ -574,7 +578,7 @@ void readTag()
 void updateDisplayRat1()
 {
     display.setCursor(0, 0);
-    display.print(num_acts_1);
+    //display.print(num_acts_1);
     display.print(F(" R1:"));
     display.print(rat_1_total_volume, 2);
     display.print(F("mL"));
@@ -588,7 +592,7 @@ void updateDisplayRat1()
 void updateDisplayRat2()
 {
     display.setCursor(0, 8);
-    display.print(num_acts_2);
+    //display.print(num_acts_2);
     display.print(F(" R2:"));
     display.print(rat_2_total_volume, 2);
     display.print(F("mL"));
