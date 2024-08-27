@@ -53,7 +53,7 @@ OpenLog logger;
 //********************************************************************************************
 char tag1[tagLength] = "0CC4B9F04C87"; // rat 1 tag
 char tag2[tagLength] = "B4C4B9F04C87"; // rat 2 tag
-char tag3[tagLength] = "223D103CBC87"; // rat 3 tag
+char tag3[tagLength] = "xxxD103CBC87"; // rat 3 tag
 char tag4[tagLength] = "xxxD103CBC87"; // rat 4 tag
 
 //char tag5[tagLength] = ""; // next rat tag 
@@ -76,9 +76,10 @@ int rat_3_total_licks = 0;
 int rat_4_total_licks = 0;
 // int rat_5_total_licks = 0;
 
-int time_allowed = 2000;
-int lick_reg_cap = 1800;
-int lick_end_cap = 400;
+
+int time_allowed = 2000; // Time in milliseconds that rats can drink following an RFID scan before a second RFID scan is required
+int lick_reg_cap = 700; // Lick capacitance needed to begin bout. May need to be adjusted for each build
+int lick_end_cap = 500; // capacitance needed to end a lick so another lick can be initiated, May need adjusting for each build
 
 
 // Initializing variables to 0
@@ -91,8 +92,6 @@ unsigned long bout_end = 0;
 int tick = 0;
 unsigned long start = 0;
 byte buttonState = 0;
-int num_acts_1 = 0;
-int num_acts_2 = 0;
 
 // flow_scale may need to be adjusted for volume measurement to be accurate
 float flow_scale = 0.53879;
@@ -106,10 +105,9 @@ CapacitiveSensor cap_val = CapacitiveSensor(sendPin, sensePin);
 
 void setup()
 {
-
-    pinMode(buttonPin, INPUT_PULLUP); // set button pin as input with a pull-up resistance
+    // set button pin as input with a pull-up resistance
+    pinMode(buttonPin, INPUT_PULLUP); 
     
-
     //logger file setup
     Wire.begin();
     logger.begin();
@@ -176,7 +174,7 @@ void setup()
     // set motor clockwise
     digitalWrite(dirPin, HIGH);
 
-    // start serials
+    // start software serial (needed to read RFIDs one digit at a time)
     serial.begin(9600);
 
     // LED display settings and initialization
@@ -233,9 +231,6 @@ void checkTag(char tag[])
     //********************************************************
     if (compareTag(tag, tag1))
     { // if senses tag 1
-    
-        //num_acts_1++;
-        //updateDisplayRat1();
         
         // timer for last tag read
         start = millis();
@@ -252,7 +247,7 @@ void checkTag(char tag[])
         // While the tag present is being sensed or less than 2s has passed since tag present
         while ((compareTag(tag, tag1)) || (((millis() - start) < time_allowed))) 
         { 
-            // set loop timer. used later for resetting scanner
+            // begin loop timer, used for resetting reader later on
             count++;
 
             // reset last read timer if tag is read
@@ -292,7 +287,7 @@ void checkTag(char tag[])
 
             // reset reader every 30 loops. This and the following if statement are required to ensure enough time has passed
             // before the scanner reads again. the reset function takes some time to activate so if not enough time has passed 
-            // before readTag() the function will read nothing and the loop will end. 
+            // before readTag() is activated, the function will read nothing and the loop will end prematurely. 
             if (count % 30 == 0){
               clearTag(tagString);
               resetReader();
@@ -301,8 +296,6 @@ void checkTag(char tag[])
             if ((count - 20) % 30 == 0){
               readTag();
             }
-
-
         }
 
         // if a bout has occured and is finished, save the results
@@ -326,8 +319,6 @@ void checkTag(char tag[])
     }
     else if (compareTag(tag, tag2))
     {
-        //num_acts_2++;
-        //updateDisplayRat2();
         start = millis();
         bout_start = millis();
         bout_end = bout_start;
@@ -393,6 +384,7 @@ void checkTag(char tag[])
                 start = millis();
             }
             cap_value = cap_val.capacitiveSensor(100);
+            //Serial.println(cap_value);
             if (cap_value > lick_reg_cap)
             {
               while (cap_value > lick_end_cap){ 
@@ -578,7 +570,6 @@ void readTag()
 void updateDisplayRat1()
 {
     display.setCursor(0, 0);
-    //display.print(num_acts_1);
     display.print(F(" R1:"));
     display.print(rat_1_total_volume, 2);
     display.print(F("mL"));
@@ -592,7 +583,6 @@ void updateDisplayRat1()
 void updateDisplayRat2()
 {
     display.setCursor(0, 8);
-    //display.print(num_acts_2);
     display.print(F(" R2:"));
     display.print(rat_2_total_volume, 2);
     display.print(F("mL"));
@@ -638,3 +628,4 @@ void activate_motor()
     delayMicroseconds(4000);
   }
 }
+
